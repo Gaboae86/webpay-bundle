@@ -1,0 +1,89 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "306cd98d6b6c6ff58146432d9e829285",
+    "packages": [
+        {
+            "name": "freshwork/transbank",
+            "version": "1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/freshworkstudio/transbank-web-services.git",
+                "reference": "381f10e9f535579c41d620843ecd09d0649a34f8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/freshworkstudio/transbank-web-services/zipball/381f10e9f535579c41d620843ecd09d0649a34f8",
+                "reference": "381f10e9f535579c41d620843ecd09d0649a34f8",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Freshwork\\Transbank\\": "src/"
+                },
+                "classmap": [
+                    "src/wss"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Gonzalo De Spirito",
+                    "email": "gonzalo@freshworkstudio.com"
+                }
+            ],
+            "description": "SDK para webservices de transbank (Webpay Plus, Webpay OneClick, Webpay PatPass)",
+            "time": "2018-10-01T19:54:10+00:00"
+        },
+        {
+            "name": "miguelalcaino/payment-gateway",
+            "version": "1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MiguelAlcaino/payment-gateway.git",
+                "reference": "fa9e42a6922baed3b0196adedf4be4b0baf342de"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/MiguelAlcaino/payment-gateway/zipball/fa9e42a6922baed3b0196adedf4be4b0baf342de",
+                "reference": "fa9e42a6922baed3b0196adedf4be4b0baf342de",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MiguelAlcaino\\PaymentGateway\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Miguel Alcaino",
+                    "email": "miguel.alcaino@ogb.cl"
+                }
+            ],
+            "time": "2018-11-26T15:30:46+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

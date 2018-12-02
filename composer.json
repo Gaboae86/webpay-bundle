@@ -1,0 +1,16 @@
+{
+    "name": "gabrielcorrea/webpay-bundle",
+    "description": "Integración webpay para mindbody",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gaboae86",
+            "email": "gabriel.correa.r@hotmail.com"
+        }
+    ],
+    "require": {
+        "freshwork/transbank": "^1.0",
+        "miguelalcaino/payment-gateway": "^1.0"
+    }
+}
