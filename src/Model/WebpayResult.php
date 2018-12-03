@@ -97,7 +97,7 @@ class WebpayResult
 
     /**
      *  Monto de la transacción. Máximo 2 decimales para USD.
-     *
+
      * Largo máximo: 2
      *
      * @var string
@@ -132,6 +132,31 @@ class WebpayResult
      * @var string
      */
     private $cardNumber;
+
+    /**
+     * Token generado para la transacción
+     *
+     * @var string
+     */
+    private $token;
+
+    /**
+     * @return string
+     */
+    public function getToken(): string
+    {
+        return $this->token;
+    }
+
+    /**
+     * @param string $token
+     * @return WebpayResult
+     */
+    public function setToken(string $token): WebpayResult
+    {
+        $this->token = $token;
+        return $this;
+    }
 
     /**
      * @return TransactionRecordInterface
@@ -217,7 +242,7 @@ class WebpayResult
      * @param string $sessionId
      * @return WebpayResult
      */
-    public function setSessionId(string $sessionId): WebpayResult
+    public function setSessionId(?string $sessionId): WebpayResult
     {
         $this->sessionId = $sessionId;
         return $this;
@@ -379,7 +404,7 @@ class WebpayResult
      * @param string $cardExpirationDate
      * @return WebpayResult
      */
-    public function setCardExpirationDate(string $cardExpirationDate): WebpayResult
+    public function setCardExpirationDate(?string $cardExpirationDate): WebpayResult
     {
         $this->cardExpirationDate = $cardExpirationDate;
         return $this;

@@ -120,9 +120,24 @@ class WebpayService
         try {
             $transactionResult = $webpayNormal->getTransactionResult($tokenWs);//obtengo los campos que retorno la transaccion
 
-
             $webpayResult = new WebpayResult();
-            $webpayResult->setBuyOrder($transactionResult->buyOrder)->setAmount($transactionResult->detailOutput->amount);
+            $webpayResult
+                ->setBuyOrder($transactionResult->buyOrder)
+                ->setAmount($transactionResult->detailOutput->amount)
+                ->setToken($tokenWs)
+                ->setAccountingDate($transactionResult->accountingDate)
+                ->setAuthorizationCode($transactionResult->detailOutput->authorizationCode)
+                ->setCardExpirationDate($transactionResult->cardDetail->cardExpirationDate)
+                ->setCardNumber($transactionResult->cardDetail->cardNumber)
+                ->setCommerceCode($transactionResult->detailOutput->commerceCode)
+                ->setPaymentTypeCode($transactionResult->detailOutput->paymentTypeCode)
+                ->setResponseCode($transactionResult->detailOutput->responseCode)
+                ->setSessionId($transactionResult->sessionId)
+                ->setSharesNumber($transactionResult->detailOutput->sharesNumber)
+                ->setTransactionDate($transactionResult->transactionDate)
+                ->setVCI($transactionResult->VCI);
+
+
 
             try {
                 $this->saveTransactionService->saveTransactionResult($webpayResult);
