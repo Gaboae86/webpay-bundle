@@ -7,10 +7,10 @@ parameters:
 #  router.request_context.host: '%env(HOST)%'
 #  router.request_context.scheme: https
 #  router.request_context.base_url: ''
-#  mailer_user: '%env(MAILER_USER)%'
-  webpay_final_url: '%env(WEBPAY_FINAL_URL)%'
-  webpay_path_key: '%env(WEPBAY_PATH_KEY)%'
-  webpay_path_crt:  '%env(WEBPAY_PATH_CRT)%'
+  webpay_final_url: '%env(GABRIELCORREA_WEBPAY_BUNDLE_FINAL_URL)%'
+  webpay_path_key: '%env(GABRIELCORREA_WEBPAY_BUNDLE_PATH_KEY)%'
+  webpay_path_crt:  '%env(GABRIELCORREA_WEBPAY_BUNDLE_PATH_CRT)%'
+  webpay_is_dev_end: '%env(GABRIELCORREA_WEBPAY_BUNDLE_IS_DEV_END)%'
 
 services:
   _defaults:

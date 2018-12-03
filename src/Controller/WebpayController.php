@@ -41,21 +41,25 @@ class WebpayController extends AbstractController
      */
     public function processPaymentAction(Request $request, WebpayService $webpayService, ParameterBagInterface $params)
     {
-        $amount = 10000;// $request->getSession()->get('mindbody_amount');//monto de la venta
-        $buyOrder = rand(1, 9999);//$request->getSession()->get('mindbody_buyorder');//id de la orden de compra (puede ser string)
+        $amount = $request->getSession()->get('amount');
+        $buyOrder = $request->getSession()->get('buyorder');
 
-
+        $webpay_final_url = $params->get('webpay_final_url');
         $private_key = $params->get('webpay_path_key');
         $client_certificate = $params->get('webpay_path_crt');
-        $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null, CertificationBag::INTEGRATION);//PROD
+        $is_dev_end = $params->get('webpay_is_dev_end');
 
+        if ($is_dev_end == 'true') {
+            $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
+                CertificationBag::PRODUCTION);
+        } else {
+            $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
+                CertificationBag::INTEGRATION);
+        }
 
         $webpayNormal = TransbankServiceFactory::normal($certificationBag);
 
         $webpayNormal->addTransactionDetail($amount, $buyOrder);
-
-
-        $webpay_final_url = $params->get('webpay_final_url');
 
 
         $webpayResponse = $webpayNormal->initTransaction($this->generateUrl('webpay_response', [],
@@ -65,11 +69,7 @@ class WebpayController extends AbstractController
 
         return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $webpayRedirectHTML]);
 
-        /*
-         * ACA VAS A PREPARAR LOS DATOS PARA EMPEZAR LAS MIERDAS CON WEBPAY
-         * POR EJEMPLO VAS A TRAER EL MONTO DE LA LA SESSION, PROBABLEMNETE VAS A ACCEDER A ESE VALOR ASI
-         *
-         */
+
         //
         /*
          * Yo a esta ruta la voy a llamar desde afuera, ya cuando tenga tu bundle instalado y todo el webeo
@@ -119,28 +119,6 @@ class WebpayController extends AbstractController
          *
          *
          */
-
-        /*
-         * ESTO NO ES CODIGO FINAL PORQUE EL METODO NO SE DEBERIA LLAMAR TEST Y WEAS
-         */
-        $webpayService->testPayment('noseque wea va a ca', $request->getSession()->get('mindbody_amount'),
-            $this->generateUrl('webpay_response', [], UrlGeneratorInterface::ABSOLUTE_URL), // esta es parte de tu bundle, facil. El argumento final es para que la url se genere completa. http://blah bla
-            /*
-             * este parametro esta definido en la app de PP.
-           * Digamos que tenemos la app de PP e importamos tu bundle pero no definimos ese parametro dentro de nuestras variables de .env
-             * en ese caso el codigo aqui se caeria, porque tu bundle depende de ese parametro sea donde sea que este instalado.
-             * El weon que  instala, para que esta wea funcione, tiene que definir ese parametro.
-             * Como ya tenemos la variable definida en nuestro services.yaml y esa variable se esta leyendo desde el .env.local
-             * asi que va a funcionar.
-             */
-            $params->get('webpay_final_url')
-        );
-        //Con eso ya estas para que webpay ccahe las dos urls. La url final va a ser la pantallita feliz con "TODO RESULTO BIENN!"
-        //tasai?si
-
-        /*
-         * FIN DE EL CODIGO DE MUESTRA
-         */
     }
 
     /**
@@ -155,7 +133,6 @@ class WebpayController extends AbstractController
     public function webpayResponseAction(Request $request, WebpayService $webpayService)
     {
         $token_ws = $request->request->get('token_ws');
-        $session = $request->getSession();
 
         try {
             $response = $webpayService->processResponseWebpay($token_ws);
@@ -195,106 +172,4 @@ class WebpayController extends AbstractController
          */
     }
 
-
-    /**
-     * @param Request $request
-     * @param WebpayService $webpayService
-     * @param ParameterBagInterface $params
-         * @Route("/process-payment-v0", name="webpay_process_payment_v0")
-     * @return \Symfony\Component\HttpFoundation\Response
-     * @throws \Freshwork\Transbank\Exceptions\EmptyTransactionException
-     */
-    public function processPaymentAction_v0(Request $request, WebpayService $webpayService, ParameterBagInterface $params)
-    {
-        $amount = 10000;// $request->getSession()->get('mindbody_amount');//monto de la venta
-        $buyOrder = rand(1, 9999);//$request->getSession()->get('mindbody_buyorder');//id de la orden de compra (puede ser string)
-
-        $webpay_final_url = $params->get('webpay_final_url');
-        $private_key = $params->get('webpay_path_key');
-        $client_certificate = $params->get('webpay_path_crt');
-
-        $certificationBag = CertificationBagFactory::create(
-            $private_key, $client_certificate, null, CertificationBag::INTEGRATION);//PROD
-
-
-        $webpayNormal = TransbankServiceFactory::normal($certificationBag);
-
-        $webpayNormal->addTransactionDetail($amount, $buyOrder);
-
-
-        $webpayResponse = $webpayNormal->initTransaction($this->generateUrl('webpay_response_v0', [],
-            UrlGeneratorInterface::ABSOLUTE_URL), $webpay_final_url);
-
-        $webpayRedirectHTML = RedirectorHelper::redirectHTML($webpayResponse->url, $webpayResponse->token);
-
-        return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $webpayRedirectHTML]);
-
-
-    }
-
-    /**
-     * @param Request $request
-     * @param WebpayService $webpayService
-     * @Route("/webpay-response-v0", name="webpay_response_v0")
-     * @return Response
-     * @throws RejectedPaymentException
-     */
-    public function webpayResponseAction_v0(Request $request, WebpayService $webpayService)
-    {
-        $token_ws = $request->request->get('token_ws');
-        $session = $request->getSession();
-
-
-        $certificationBag = CertificationBagFactory::integrationWebpayNormal();
-        $webpayNormal = TransbankServiceFactory::normal($certificationBag);
-
-        /*Se verifica con el token el estado de la transaccion*/
-        $transactionResult = $webpayNormal->getTransactionResult($token_ws);//obtengo los campos que retorno la transaccion
-
-        $session->set('transactionResult', $transactionResult);
-
-        $webpayNormal->acknowledgeTransaction();
-
-        $webpayResponseCode = $transactionResult->detailOutput->responseCode;
-
-        if ($webpayResponseCode === 0) {
-            //orden correcta
-        } else {
-            //PROBLEMA EN WEBPAY TRANSACCION
-//            switch ($webpayResponseCode) {
-//                case self::CODIGO_RECHAZO_DE_TRANSACCION_1:
-//                    throw new RejectedPaymentException(
-//                        'order has been rejected',
-//                        $transactionResult->detailOutput->responseCode
-//                    );
-//                    break;
-//                case self::CODIGO_TRANSACCION_DEBE_REINTENTARSE:
-//                    echo "i es igual a 1";
-//                    break;
-//                case self::CODIGO_ERROR_EN_TRANSACCION:
-//                    echo "i es igual a 2";
-//                    break;
-//                case self::CODIGO_RECHAZO_DE_TRANSACCION_4:
-//                    echo "i es igual a 2";
-//                    break;
-//                case self::CODIGO_RECHAZO_POR_ERROR_DE_TASA:
-//                    echo "i es igual a 2";
-//                    break;
-//                case self::CODIGO_EXCEDE_CUPO_MAXIMO_MENSUAL:
-//                    echo "i es igual a 2";
-//                    break;
-//                case self::CODIGO_EXCEDE_LIMITE_DIARIO_POR_TRANSACCION:
-//                    echo "i es igual a 2";
-//                    break;
-//                case self::CODIGO_RUBRO_NO_AUTORIZADO:
-//                    echo "i es igual a 2";
-//                    break;
-//            }
-        }
-
-        $redirectHTML = RedirectorHelper::redirectBackNormal($transactionResult->urlRedirection);
-
-        return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $redirectHTML]);
-
-    }
 }
