@@ -83,6 +83,9 @@ class WebpayService
     }
 
     /**
+     * Método que se llama desde el controlador al momento de recibir la respuesta de la transacción desde webpay
+     * se
+     *
      * @param string $tokenWs
      * @return string
      * @throws AcknowledgeTransactionException
@@ -100,13 +103,16 @@ class WebpayService
         $transactionResult = null;
         $transactionResult = $this->executeTransactionResult($webpayNormal, $tokenWs);
 
-
         $redirectHTML = RedirectorHelper::redirectBackNormal($transactionResult->urlRedirection);
 
         return $this->template->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $redirectHTML]);
     }
 
     /**
+     * Método que recibe como parametro la respuesta de webpay y el token de la transaccion
+     * Dentro del método se llama al handler en la aplicacion que ocupa bundle, esto es para almacenar los
+     * datos de la transacción (this->saveTransactionService->saveTransactionResult($webpayResult);)
+     *
      * @param WebpayNormal $webpayNormal
      * @param string $tokenWs
      * @return \Freshwork\Transbank\WebpayStandard\transactionResultOutput
@@ -137,11 +143,15 @@ class WebpayService
                 ->setTransactionDate($transactionResult->transactionDate)
                 ->setVCI($transactionResult->VCI);
 
-
-
+            $saveTransactionResultCorrecto = false;
+            $acknowledgeTransactionCorrecto = false;
             try {
                 $this->saveTransactionService->saveTransactionResult($webpayResult);
+                $saveTransactionResultCorrecto = true;
+
                 $this->acknowledgeTransaction($webpayNormal);
+                $acknowledgeTransactionCorrecto = true;
+
             } catch (NotSuccessfulSaveTransactionException $exception) {
 
             } catch (AcknowledgeTransactionException $exception) {

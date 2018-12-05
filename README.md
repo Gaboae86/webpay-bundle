@@ -17,14 +17,14 @@ GABRIELCORREA_WEBPAY_BUNDLE_FINAL_URL=ZZZZZZZ
 ###### Descripción: corresponde al path donde esta almacenado la key de webpay
 ###### Ejemplo: 
 ```
-GABRIELCORREA_WEBPAY_BUNDLE_PATH_KEY=/home/gabo/projects/symfony_webpay_project/lib/GabrielCorrea/WebpayBundle/src/Resources/certs/597020000541.key
+GABRIELCORREA_WEBPAY_BUNDLE_PATH_KEY=/home/user_account/webpay/certs//597020000541.key
 ``` 
 ##### GABRIELCORREA_WEBPAY_BUNDLE_PATH_CRT: 
 ###### Descripción: 
 corresponde al path donde esta almacenado la parte pública de un certificado de webpay
 ###### Ejemplo:
 ```
-GABRIELCORREA_WEBPAY_BUNDLE_PATH_CRT=/home/gabo/projects/symfony_webpay_project/lib/GabrielCorrea/WebpayBundle/src/Resources/certs/597020000541.crt
+GABRIELCORREA_WEBPAY_BUNDLE_PATH_CRT=/home/user_account/webpay/certs/597020000541.crt
 ```
                  
 ##### GABRIELCORREA_WEBPAY_BUNDLE_IS_DEV_END:
@@ -36,7 +36,8 @@ GABRIELCORREA_WEBPAY_BUNDLE_IS_DEV_END=false
 ```                    
 ##### GABRIELCORREA_WEBPAY_BUNDLE_FINAL_URL:
 ###### Descripción: 
-Corresponde a la url a la cual webpay debe redirigir al final de la compra para ver el resumen
+Corresponde a la url a la cual webpay debe redirigir al final de la compra para ver el resumen. A esta url webpay le 
+envia por POST el token de la transacción, por eso es importante guardarlo (de preferencia indexado en la base de datos)
 ######  Ejemplo:
 ```
 GABRIELCORREA_WEBPAY_BUNDLE_FINAL_URL=http://www.mipaginaweb.com/descripcion-compra-producto
@@ -48,10 +49,12 @@ gabriel_correa_webpay:
     handler:
         save_transaction_handler: App\Service\PaymentHandler
 ```
-En la aplicaicon se debe creaer un servicio que implemente la Interface ***SaveTransactionInterface***.
-Dentro de la clase de este servicio se deberá crear el método ***saveTransactionResult*** (el cual lo exige la interfaz).
-el objetivo de este método es ser llamado desde WebpayBundle, envido como parametro los datos del resultado de la 
-respuesta de WebPay.
+En la aplicación se debe crear un servicio que implemente la Interface ***GabrielCorrea/WebpayBundle/src/Interfaces/SaveTransactionInterface***.
+Dentro de la clase de este servicio se deberá crear dos métodos: ***saveTransactionResult*** y ***errorHandlingWebpayBundle***(los cuales los exige la intefaz).
+* ***saveTransactionResult:*** este metodo sera llamado desde WebpayBundle, enviando como parametro los datos del 
+resultado de la respuesta de WebPay, los cuales deberan ser guardados dentro de la aplicación.
+* ***errorHandlingWebpayBundle:*** este metodo sera llamado desde WebpayBundle cuando ocurra un error dentro del bundle. 
+De esta forma podra ser controlado dentro de la aplicación 
 ######  Ejemplo:
 ```
 public function saveTransactionResult(WebpayResult $webpayResult): ?TransactionRecordInterface
@@ -77,9 +80,6 @@ public function saveTransactionResult(WebpayResult $webpayResult): ?TransactionR
 * ***token*** Token generado por webpay para la transacción. es importante guardar este token junto a la transacción para identificar la compra en la ruta final
 
 
-
-
-
 Rutas
 --------------
 ##### Configuración de las rutas:
@@ -89,17 +89,21 @@ webpay_router:
     resource: '@GabrielCorreaWebpayBundle/Controller/'
     type: annotation
 ```
-##### Rutas disponibles:
-###### webpay_process_payment: 
+#### Rutas disponibles:
+##### webpay_process_payment: 
 En esta ruta se envia la petición para procesar el pago en webpay.
 Antes de llamar esta ruta se deben crear dos variables de sesión:
 * amount: Corresponde al monto de la transacción.  
 * buyorder: Corresponde a un identificador unico , generado en la palicación para la transacción en curso
 
+###### Excepciónes: 
+***NotSuccessfulSaveTransactionException:*** Esta excepción es por si hay algun problema al guardar la información de la transacción dentro de 
+la aplicacion. Esto hara que no se mande la confirmación a webpay, haciendo que no finalice la transacción
 
 Servicios
 ------------
---- no hay ---
+#### WebpayService
+
 
 
 
