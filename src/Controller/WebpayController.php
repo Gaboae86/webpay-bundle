@@ -15,6 +15,7 @@ use Freshwork\Transbank\TransbankServiceFactory;
 use GabrielCorrea\WebpayBundle\Exception\AcknowledgeTransactionException;
 use GabrielCorrea\WebpayBundle\Exception\RejectedPaymentException;
 use GabrielCorrea\WebpayBundle\Exception\TransactionResultException;
+use GabrielCorrea\WebpayBundle\Form\Webpay\WebpayPaymentType;
 use GabrielCorrea\WebpayBundle\Interfaces\SaveTransactionInterface;
 use GabrielCorrea\WebpayBundle\Service\WebpayService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -46,34 +47,53 @@ class WebpayController extends AbstractController
      */
     public function processPaymentAction(Request $request, ParameterBagInterface $params, SaveTransactionInterface $saveTransactionInterface)
     {
-        $amount = $request->getSession()->get('amount');
-        $buyOrder = $request->getSession()->get('buyorder');
+        $form = $this->createForm(
+            WebpayPaymentType::class,
+            null,
+            [
+                'action' => $this->generateUrl('webpay_process_payment'),
+                'method' => 'POST',
+            ]
+        );
 
-        $webpay_final_url = $params->get('webpay_final_url');
-        $private_key = $params->get('webpay_path_key');
-        $client_certificate = $params->get('webpay_path_crt');
-        $is_dev_end = $params->get('webpay_is_dev_end');
+        $form->handleRequest($request);
 
-        $saveTransactionInterface->errorHandlingWebpayBundle("prueba");
+        if ($form->isSubmitted() && $form->isValid()) {
 
-        if ($is_dev_end == 'true') {
-            $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
-                CertificationBag::PRODUCTION);
+            $amount =  $form->get('amount')->getData();
+            $buyOrder =  $form->get('buyOrder')->getData();
+
+            $webpay_final_url = $params->get('webpay_final_url');
+            $private_key = $params->get('webpay_path_key');
+            $client_certificate = $params->get('webpay_path_crt');
+            $is_dev_end = $params->get('webpay_is_dev_end');
+
+            $saveTransactionInterface->errorHandlingWebpayBundle("prueba");
+
+            if ($is_dev_end == 'true') {
+                $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
+                    CertificationBag::PRODUCTION);
+            } else {
+                $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
+                    CertificationBag::INTEGRATION);
+            }
+
+            $webpayNormal = TransbankServiceFactory::normal($certificationBag);
+
+            $webpayNormal->addTransactionDetail($amount, $buyOrder);
+
+            $webpayResponse = $webpayNormal->initTransaction($this->generateUrl('webpay_response', [],
+                UrlGeneratorInterface::ABSOLUTE_URL), $webpay_final_url);
+
+            $webpayRedirectHTML = RedirectorHelper::redirectHTML($webpayResponse->url, $webpayResponse->token);
+
+            return $this->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig', ['redirect' => $webpayRedirectHTML]);
+
         } else {
-            $certificationBag = CertificationBagFactory::create($private_key, $client_certificate, null,
-                CertificationBag::INTEGRATION);
+                return $this->render($params->get('payment_form_view'), array(
+                    'pay_form' => $form->createView()
+                ));
         }
-
-        $webpayNormal = TransbankServiceFactory::normal($certificationBag);
-
-        $webpayNormal->addTransactionDetail($amount, $buyOrder);
-
-        $webpayResponse = $webpayNormal->initTransaction($this->generateUrl('webpay_response', [],
-            UrlGeneratorInterface::ABSOLUTE_URL), $webpay_final_url);
-
-        $webpayRedirectHTML = RedirectorHelper::redirectHTML($webpayResponse->url, $webpayResponse->token);
-
-        return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $webpayRedirectHTML]);
 
 
         /* flujo:
@@ -112,12 +132,12 @@ class WebpayController extends AbstractController
         } catch (RejectedPaymentException $exception) {
             //dentro de estos catch debe ser llamado un metodo de una interfaz definida para el manejo de errores. Así
             //pueda ser procesado en la aplicacion
-            return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => 'Tu pago fue rechazado',]);
+            return $this->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig', ['redirect' => 'Tu pago fue rechazado',]);
         } catch (TransactionResultException $exception) {
-            return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig',
+            return $this->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig',
                 ['redirect' => 'Hubo un error tratando de construir tu transaction',]);
         } catch (AcknowledgeTransactionException $exception) {
-            return $this->render('@GabrielCorreaWebpay/redirectWebpay.html.twig',
+            return $this->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig',
                 ['redirect' => 'Hubo un error al registrar tu transaction en webpay',]
             );
         }

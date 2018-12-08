@@ -105,7 +105,7 @@ class WebpayService
 
         $redirectHTML = RedirectorHelper::redirectBackNormal($transactionResult->urlRedirection);
 
-        return $this->template->render('@GabrielCorreaWebpay/redirectWebpay.html.twig', ['redirect' => $redirectHTML]);
+        return $this->template->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig', ['redirect' => $redirectHTML]);
     }
 
     /**

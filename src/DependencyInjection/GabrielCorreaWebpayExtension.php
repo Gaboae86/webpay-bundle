@@ -26,6 +26,12 @@ class GabrielCorreaWebpayExtension extends Extension
         $container->setAlias('gabriel_correa_webpay_save_transaction_handler',
             $config['handler']['save_transaction_handler']);
 
+        $container->setParameter('payment_form_view', $config['views']['payment_form_view']);
+
+        $container->setParameter('webpay_final_url', $config['webpay_params']['webpay_final_url']);
+        $container->setParameter('webpay_path_key', $config['webpay_params']['webpay_path_key']);
+        $container->setParameter('webpay_path_crt', $config['webpay_params']['webpay_path_crt']);
+        $container->setParameter('webpay_is_dev_end', $config['webpay_params']['webpay_is_dev_end']);
 
         $loader = new YamlFileLoader(
             $container,
