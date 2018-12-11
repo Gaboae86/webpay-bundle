@@ -145,11 +145,7 @@ class WebpayService
 
             $this->saveTransactionService->saveTransactionResult($webpayResult); //guarda resultado en la aplicacion
             $this->acknowledgeTransaction($webpayNormal); // se informa a transbank que cierre la transaccion (aprovada o rechazada)
-
-        } catch (NotSuccessfulSaveTransactionException $notSuccessfulSaveTransactionException) {
-            throw $notSuccessfulSaveTransactionException;
-        } catch (AcknowledgeTransactionException $acknowledgeTransactionException) {
-            throw $acknowledgeTransactionException;
+            
         } catch (\SoapFault $exception) {// error en webpay
             throw new TransactionResultException($exception->getMessage(), $exception->getCode());
         }
