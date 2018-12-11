@@ -26,10 +26,19 @@ interface SaveTransactionInterface
     public function saveTransactionResult(WebpayResult $webpayResult): ?TransactionRecordInterface;
 
     /**
-     * Esta funcion será llamada si es que hay algun error en el proceso, enviando como parametro el mensaje de error
-     *
-     * @param String $errorMessage
-     * @return TransactionRecordInterface|null
+     * @param WebpayException $webpayException
+     * @return mixed
      */
     public function handleProcessPaymentError(WebpayException $webpayException);
+
+    /**
+     * Este se llamara si es que falla el proceso que recibe la transacción desde webpay la guarda en la aplicacion:
+     * TransactionResultException: Problemas al consultar la respuesta a webpay
+     * NotSuccessfulSaveTransactionException: Problemas al guardar en la aplicación
+     * AcknowledgeTransactionException: problemas al cerrar la transacción en webpay
+     *
+     * @param WebpayException $webpayException
+     * @return mixed
+     */
+    public function handleProcessResultWebpayTransactionError(WebpayException $webpayException);
 }

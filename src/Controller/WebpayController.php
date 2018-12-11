@@ -124,6 +124,7 @@ class WebpayController extends AbstractController
      *
      * @param Request $request
      * @param WebpayService $webpayService
+     * @Route("/webpay-response", name="webpay_response")
      * @param SaveTransactionInterface $saveTransactionInterface
      * @return Response
      * @throws \Twig_Error_Loader
@@ -140,14 +141,11 @@ class WebpayController extends AbstractController
             return new Response($response);
 
         } catch (NotSuccessfulSaveTransactionException $notSuccessfulSaveTransactionException) {
-            $webpayException = new WebpayException($notSuccessfulSaveTransactionException->getMessage(), $notSuccessfulSaveTransactionException->getCode());
-            $saveTransactionInterface->handleProcessPaymentError($webpayException);
+            $saveTransactionInterface->handleProcessResultWebpayTransactionError($notSuccessfulSaveTransactionException);
         } catch (TransactionResultException $transactionResultException) {
-            $webpayException = new WebpayException($transactionResultException->getMessage(), $transactionResultException->getCode());
-            $saveTransactionInterface->handleProcessPaymentError($webpayException);
+            $saveTransactionInterface->handleProcessResultWebpayTransactionError($transactionResultException);
         } catch (AcknowledgeTransactionException $acknowledgeTransactionException) {
-            $webpayException = new WebpayException($acknowledgeTransactionException->getMessage(), $acknowledgeTransactionException->getCode());
-            $saveTransactionInterface->handleProcessPaymentError($webpayException);
+            $saveTransactionInterface->handleProcessResultWebpayTransactionError($acknowledgeTransactionException);
         }
     }
 }

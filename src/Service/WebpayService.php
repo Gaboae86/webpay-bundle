@@ -142,21 +142,20 @@ class WebpayService
                 ->setTransactionDate($transactionResult->transactionDate)
                 ->setVCI($transactionResult->VCI);
 
-            try {
 
-                $this->saveTransactionService->saveTransactionResult($webpayResult); //guarda resultado en la aplicacion
-                $this->acknowledgeTransaction($webpayNormal); // se informa a transbank que cierre la transaccion (aprovada o rechazada)
+            $this->saveTransactionService->saveTransactionResult($webpayResult); //guarda resultado en la aplicacion
+            $this->acknowledgeTransaction($webpayNormal); // se informa a transbank que cierre la transaccion (aprovada o rechazada)
 
-            } catch (NotSuccessfulSaveTransactionException $exception) {
-                throw $exception;
-            } catch (AcknowledgeTransactionException $exception) {
-                throw $exception;
-            }
-
-            return $transactionResult;
-
+        } catch (NotSuccessfulSaveTransactionException $notSuccessfulSaveTransactionException) {
+            throw $notSuccessfulSaveTransactionException;
+        } catch (AcknowledgeTransactionException $acknowledgeTransactionException) {
+            throw $acknowledgeTransactionException;
         } catch (\SoapFault $exception) {// error en webpay
             throw new TransactionResultException($exception->getMessage(), $exception->getCode());
         }
+
+        return $transactionResult;
+
+
     }
 }
