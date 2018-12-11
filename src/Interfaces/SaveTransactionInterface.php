@@ -9,6 +9,7 @@
 namespace GabrielCorrea\WebpayBundle\Interfaces;
 
 use GabrielCorrea\WebpayBundle\Exception\NotSuccessfulSaveTransactionException;
+use GabrielCorrea\WebpayBundle\Exception\WebpayException;
 use GabrielCorrea\WebpayBundle\Model\WebpayResult;
 use MiguelAlcaino\PaymentGateway\Interfaces\Entity\TransactionRecordInterface;
 
@@ -30,5 +31,5 @@ interface SaveTransactionInterface
      * @param String $errorMessage
      * @return TransactionRecordInterface|null
      */
-    public function errorHandlingWebpayBundle(String $errorMessage);
+    public function handleProcessPaymentError(WebpayException $webpayException);
 }

@@ -15,7 +15,6 @@ use Freshwork\Transbank\TransbankServiceFactory;
 use Freshwork\Transbank\WebpayNormal;
 use GabrielCorrea\WebpayBundle\Exception\AcknowledgeTransactionException;
 use GabrielCorrea\WebpayBundle\Exception\NotSuccessfulSaveTransactionException;
-use GabrielCorrea\WebpayBundle\Exception\RejectedPaymentException;
 use GabrielCorrea\WebpayBundle\Exception\TransactionResultException;
 use GabrielCorrea\WebpayBundle\Interfaces\SaveTransactionInterface;
 use GabrielCorrea\WebpayBundle\Model\WebpayResult;
@@ -85,11 +84,10 @@ class WebpayService
     /**
      * Método que se llama desde el controlador al momento de recibir la respuesta de la transacción desde webpay
      * se
-     *
      * @param string $tokenWs
      * @return string
      * @throws AcknowledgeTransactionException
-     * @throws RejectedPaymentException
+     * @throws NotSuccessfulSaveTransactionException
      * @throws TransactionResultException
      * @throws \Twig_Error_Loader
      * @throws \Twig_Error_Runtime
@@ -105,7 +103,8 @@ class WebpayService
 
         $redirectHTML = RedirectorHelper::redirectBackNormal($transactionResult->urlRedirection);
 
-        return $this->template->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig', ['redirect' => $redirectHTML]);
+        return $this->template->render('@GabrielCorreaWebpay/Webpay/redirectWebpay.html.twig',
+            ['redirect' => $redirectHTML]);
     }
 
     /**
@@ -117,7 +116,7 @@ class WebpayService
      * @param string $tokenWs
      * @return \Freshwork\Transbank\WebpayStandard\transactionResultOutput
      * @throws AcknowledgeTransactionException
-     * @throws RejectedPaymentException
+     * @throws NotSuccessfulSaveTransactionException
      * @throws TransactionResultException
      */
     private function executeTransactionResult(WebpayNormal $webpayNormal, string $tokenWs)
@@ -143,67 +142,21 @@ class WebpayService
                 ->setTransactionDate($transactionResult->transactionDate)
                 ->setVCI($transactionResult->VCI);
 
-            $saveTransactionResultCorrecto = false;
-            $acknowledgeTransactionCorrecto = false;
             try {
-                $this->saveTransactionService->saveTransactionResult($webpayResult);
-                $saveTransactionResultCorrecto = true;
 
-                $this->acknowledgeTransaction($webpayNormal);
-                $acknowledgeTransactionCorrecto = true;
+                $this->saveTransactionService->saveTransactionResult($webpayResult); //guarda resultado en la aplicacion
+                $this->acknowledgeTransaction($webpayNormal); // se informa a transbank que cierre la transaccion (aprovada o rechazada)
 
             } catch (NotSuccessfulSaveTransactionException $exception) {
-
+                throw $exception;
             } catch (AcknowledgeTransactionException $exception) {
-
+                throw $exception;
             }
 
+            return $transactionResult;
 
-            $webpayResponseCode = $transactionResult->detailOutput->responseCode;
-            if ($webpayResponseCode === self::CODIGO_TRANSACCION_APROBADA) {
-                return $transactionResult;
-            } else {
-                //PROBLEMA EN WEBPAY TRANSACCION
-                switch ($webpayResponseCode) {
-                    case self::CODIGO_RECHAZO_DE_TRANSACCION_1:
-                        throw new RejectedPaymentException(
-                            'order has been rejected',
-                            $transactionResult->detailOutput->responseCode
-                        );
-                        break;
-                    case self::CODIGO_TRANSACCION_DEBE_REINTENTARSE:
-                        echo "i es igual a 1";
-                        break;
-                    case self::CODIGO_ERROR_EN_TRANSACCION:
-                        echo "i es igual a 2";
-                        break;
-                    case self::CODIGO_RECHAZO_DE_TRANSACCION_4:
-                        echo "i es igual a 2";
-                        break;
-                    case self::CODIGO_RECHAZO_POR_ERROR_DE_TASA:
-                        echo "i es igual a 2";
-                        break;
-                    case self::CODIGO_EXCEDE_CUPO_MAXIMO_MENSUAL:
-                        echo "i es igual a 2";
-                        break;
-                    case self::CODIGO_EXCEDE_LIMITE_DIARIO_POR_TRANSACCION:
-                        echo "i es igual a 2";
-                        break;
-                    case self::CODIGO_RUBRO_NO_AUTORIZADO:
-                        echo "i es igual a 2";
-                        break;
-                }
-
-                //$this->logger->error('The order was rejected, the response code was: ' . $transactionResult->detailOutput->responseCode);
-
-            }
-        } catch (\SoapFault $exception) {
-            /*  $this->logger->error('There was an error building the webpay transaction', [
-                  'message' => $exception->getMessage(),
-                  'code' => $exception->getCode()
-              ]);*/
+        } catch (\SoapFault $exception) {// error en webpay
             throw new TransactionResultException($exception->getMessage(), $exception->getCode());
         }
     }
-
 }
